@@ -21,7 +21,6 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sh 'sudo mkdir /root/mlops2/sql'
                 sh 'sudo docker-compose -f /root/mlops2/docker-compose.yml up -d'
             }
         }
