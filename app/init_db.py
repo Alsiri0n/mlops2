@@ -18,7 +18,7 @@ def dummy_data():
     categories = []
     products = []
     for _ in range(CATEGORY_QNT):
-        categories.append(Category(cat_name=''.join(random.choices(string.ascii_lowercase, k=10))))
+        categories.append(Category(cat_name=''.join(random.choices(string.ascii_lowercase, k=7))))
 
     for _ in range(PRODUCT_QNT):
         products.append(Product(prod_name=''.join(random.choices(string.ascii_lowercase, k=15))))

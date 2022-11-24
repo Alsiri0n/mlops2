@@ -85,6 +85,57 @@ class TestMLOPS(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertNotEqual(Category.query.filter(~Category.products.any()).count(), 0)
 
+    
+    def test_api_product(self):
+        prod_temp_name="TEST_PROD_NAME"
+        prod = Product(prod_name=prod_temp_name)
+
+        db.session.add(prod)
+        db.session.commit()
+
+        prod_id = Product.query.filter_by(prod_name=prod_temp_name).first()
+        resp = self.client.get(f'/api/products/{str(prod_id.id)}')
+
+        js = resp.json
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(prod_temp_name, js['prod_name'])
+
+
+
+    def test_api_category(self):
+        cat_temp_name="TEST_CAT_NAME"
+        cat = Category(cat_name=cat_temp_name)
+        
+        db.session.add(cat)
+        db.session.commit()
+
+        cat_id = Category.query.filter_by(cat_name=cat_temp_name).first()
+        resp = self.client.get(f'/api/categories/{str(cat_id.id)}')
+        js = resp.json
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(cat_temp_name, js['cat_name'])
+
+    def test_api_product_in_category(self):
+        prod_temp_name="TEST_PROD_NAME"
+        cat_temp_name="TEST_CAT_NAME"
+        prod = Product(prod_name=prod_temp_name)
+        cat = Category(cat_name=cat_temp_name)
+
+        db.session.add(prod)
+        db.session.add(cat)
+        db.session.commit()
+
+        prod_id = Product.query.filter_by(prod_name=prod_temp_name).first()
+        cat_id = Category.query.filter_by(cat_name=cat_temp_name).first()
+        prod.categories.append(cat_id)
+        db.session.commit()
+        resp = self.client.get(f'/api/products/{str(prod_id.id)}/categories')
+
+        js = resp.json['items'][0]
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(cat_temp_name, js['cat_name'])
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
