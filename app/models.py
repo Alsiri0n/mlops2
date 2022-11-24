@@ -20,7 +20,10 @@ class Product(db.Model):
     prod_name = db.Column(db.String(50))
 
     categories = db.relationship("Category", secondary=products_categories,
-                                backref=db.backref('type', lazy='dynamic'), lazy='dynamic')
+                                backref=db.backref('products', lazy='dynamic'), lazy='dynamic')
+
+    def __repr__(self)->str:
+        return f'<Product id={self.id} prod_name={self.prod_name}>'
 
 
 class Category(db.Model):
@@ -34,3 +37,5 @@ class Category(db.Model):
 
     # products = db.relationship("Product", secondary=products_categories,
     #                             backref=db.backref('entity', lazy='dynamic'), lazy='dynamic')
+    def __repr__(self)->str:
+        return f'<Category id={self.id}, cat_name={self.cat_name}>'
