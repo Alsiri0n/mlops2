@@ -9,30 +9,30 @@ from flask import url_for
 #     """
 #     For convient work with collection of items
 #     """
-#     @staticmethod
-#     def to_collection_dict(query, page:int, per_page:int, endpoint:str,
-#                             full_data:bool=False, **kwargs)->dict:
-#         """
-#         Generic method for convert query to dict
-#         """
-#         resources = db.paginate(select=query, per_page=per_page, error_out=False)
-#         data = {
-#             'items': [item.to_dict(endpoint, full_data) for item in resources.items],
-#             '_meta': {
-#                 'page': page,
-#                 'per_page': per_page,
-#                 'total_pages': resources.pages,
-#                 'total_items': resources.total
-#             },
-#             '_links': {
-#                 'self': url_for(endpoint, page=page, per_page=per_page, **kwargs),
-#                 'next': url_for(endpoint, page=page + 1, per_page=per_page, **kwargs ) \
-#                                 if resources.has_next else None,
-#                 'prev': url_for(endpoint, page=page - 1, per_page=per_page, **kwargs) \
-#                                 if resources.has_prev else None
-#             }
-#         }
-#         return data
+    # @staticmethod
+    # def to_collection_dict(query, page:int, per_page:int, endpoint:str,
+    #                         full_data:bool=False, **kwargs)->dict:
+    #     """
+    #     Generic method for convert query to dict
+    #     """
+    #     resources = db.paginate(select=query, per_page=per_page, error_out=False)
+    #     data = {
+    #         'items': [item.to_dict(endpoint, full_data) for item in resources.items],
+    #         '_meta': {
+    #             'page': page,
+    #             'per_page': per_page,
+    #             'total_pages': resources.pages,
+    #             'total_items': resources.total
+    #         },
+    #         '_links': {
+    #             'self': url_for(endpoint, page=page, per_page=per_page, **kwargs),
+    #             'next': url_for(endpoint, page=page + 1, per_page=per_page, **kwargs ) \
+    #                             if resources.has_next else None,
+    #             'prev': url_for(endpoint, page=page - 1, per_page=per_page, **kwargs) \
+    #                             if resources.has_prev else None
+    #         }
+    #     }
+    #     return data
 
 
 
@@ -67,18 +67,10 @@ class Product(db.Model):
         ORDER BY 1
         """
         resources = db.engine.execute(query)
-        # raw = [item for item in resources]
 
         data = {
             'items': [Product.raw_dict(item) for item in resources],
-            # 'product.id': i[0],
-            # 'product.prod_name': i[1],
-            # 'category.id': i[2],
-            # 'category.cat_name': i[3],
         }
-        # data = {
-            # 'items': [item.to_dict('get_alldata', True) for item in resources],
-        # }
         return data
 
     @staticmethod
@@ -101,7 +93,7 @@ class Product(db.Model):
     def full_dict(query, endpoint:str, **kwargs)->dict:
         resources = db.paginate(select=query, per_page=100, error_out=False)
         data = {
-            'items': [item.to_dict(endpoint, True) for item in resources.items],
+            'items': [item.to_dict(endpoint, False) for item in resources.items],
         }
         return data
 
@@ -133,7 +125,32 @@ class Product(db.Model):
             }
         return data
 
+    def to_dict_all(self, query, endpoint:str, full_dict:bool=False)->dict:
+        """
+        Return dict that represents Product and belongs Categories for JSON serialization
+        """
+        if full_dict:
+            fulldata = db.paginate(select=query,
+                    per_page=10, error_out=False)
+            data = {
+                'id': self.id,
+                'prod_name': self.prod_name,
 
+                'categories': [item.to_dict(endpoint, False) for item in fulldata.items],
+                '_links': {
+                    'self': url_for(endpoint='api.get_categories_for_product', id=self.id),
+
+                }
+            }
+        else:
+            data = {
+                'id': self.id,
+                'prod_name': self.prod_name,
+                '_links': {
+                    'self': url_for(endpoint='api.get_categories_for_product', id=self.id),
+                }
+            }
+        return data
 
 
 class Category(db.Model):
@@ -181,6 +198,33 @@ class Category(db.Model):
                 'cat_name': self.cat_name,
                 '_links': {
                     'self': url_for(endpoint=endpoint, id=self.id),
+                }
+            }
+        return data
+
+    def to_dict_all(self, query, endpoint:str, full_dict:bool=False)->dict:
+        """
+        Return dict that represents Category and belongs Products for JSON serialization
+        """
+        if full_dict:
+            fulldata = db.paginate(select=query,
+                    per_page=10, error_out=False)
+            data = {
+                'id': self.id,
+                'cat_name': self.cat_name,
+
+                'products': [item.to_dict(endpoint, False) for item in fulldata.items],
+                '_links': {
+                    'self': url_for(endpoint='api.get_products_for_category', id=self.id),
+
+                }
+            }
+        else:
+            data = {
+                'id': self.id,
+                'cat_name': self.cat_name,
+                '_links': {
+                    'self': url_for(endpoint='api.get_products_for_category', id=self.id),
                 }
             }
         return data

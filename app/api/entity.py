@@ -37,7 +37,7 @@ def get_categories_for_product(id:int):
     Return categories for product
     """
     product = db.get_or_404(Product, id)
-    data = Product.full_dict(product.categories,'api.get_categories_for_product', id=id)
+    data = product.to_dict_all(product.categories, 'api.get_categories_for_product', True)
     return jsonify(data)
 
 
@@ -74,7 +74,7 @@ def get_products_for_category(id:int):
     Return products for  category
     """
     category = db.get_or_404(Category, id)
-    data = Category.full_dict(category.products, 'api.get_products_for_category', id=id)
+    data = category.to_dict_all(category.products, 'api.get_products_for_category', True)
     return jsonify(data)
 
 
