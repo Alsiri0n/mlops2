@@ -76,3 +76,13 @@ def get_products_for_category(id:int):
     category = db.get_or_404(Category, id)
     data = Category.full_dict(category.products, 'api.get_products_for_category', id=id)
     return jsonify(data)
+
+
+@bp.route('/alldata', methods=['GET'])
+def get_alldata():
+    """
+    Return all data
+    """
+    # category = db.get_or_404(Category, id)
+    data = Product.all_data()
+    return jsonify(data)

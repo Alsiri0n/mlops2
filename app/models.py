@@ -58,6 +58,46 @@ class Product(db.Model):
 
 
     @staticmethod
+    def all_data():
+        query = """
+        SELECT product.id, product.prod_name, category.id, category.cat_name
+          FROM category 
+                LEFT JOIN products_categories AS products_categories_1 ON category.id = products_categories_1.category_id 
+                FULL JOIN product ON product.id = products_categories_1.product_id
+        ORDER BY 1
+        """
+        resources = db.engine.execute(query)
+        # raw = [item for item in resources]
+
+        data = {
+            'items': [Product.raw_dict(item) for item in resources],
+            # 'product.id': i[0],
+            # 'product.prod_name': i[1],
+            # 'category.id': i[2],
+            # 'category.cat_name': i[3],
+        }
+        # data = {
+            # 'items': [item.to_dict('get_alldata', True) for item in resources],
+        # }
+        return data
+
+    @staticmethod
+    def raw_dict(item):
+        data = {
+                'product.id': item[0],
+                'product.prod_name': item[1],
+                'category.id': item[2],
+                'category.cat_name': item[3],
+                '_links': {
+                    'self_prod': url_for(endpoint='api.get_product', id=item[0] if item[0] else 0),
+                    'self_cat': url_for(endpoint='api.get_category', id=item[2] if item[2] else 0),
+                }
+            }
+        return data
+
+
+
+    @staticmethod
     def full_dict(query, endpoint:str, **kwargs)->dict:
         resources = db.paginate(select=query, per_page=100, error_out=False)
         data = {
@@ -83,7 +123,7 @@ class Product(db.Model):
     
                 }
             }
-        else: 
+        else:
             data = {
                 'id': self.id,
                 'prod_name': self.prod_name,
@@ -92,6 +132,7 @@ class Product(db.Model):
                 }
             }
         return data
+
 
 
 
