@@ -93,7 +93,7 @@ class Product(db.Model):
     def full_dict(query, endpoint:str, **kwargs)->dict:
         resources = db.paginate(select=query, per_page=100, error_out=False)
         data = {
-            'items': [item.to_dict(endpoint, False) for item in resources.items],
+            'items': [item.to_dict(endpoint, True) for item in resources.items],
         }
         return data
 
