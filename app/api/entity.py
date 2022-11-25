@@ -27,7 +27,7 @@ def get_products_all():
     Return products and categories
     """
     data = Product.full_dict(
-        db.select(Product, Category).join(Product.categories, isouter=True), 'api.get_product_sall')
+        db.select(Product, Category).join(Product.categories, isouter=True), 'api.get_product_all')
     return jsonify(data)
 
 
