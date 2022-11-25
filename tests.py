@@ -2,22 +2,22 @@
 Tests for application
 """
 import unittest
-from config import Config
+# from config import TestingConfig
 from app import create_app, db
 from app.models import Category, Product 
 
 
-class TestConfig(Config):
-    """
-    Creating test envs
-    """
-    TESTING = True
-    DB_URL = 'sqlite:///app.db'
+# class TestConfig(Config):
+#     """
+#     Creating test envs
+#     """
+#     TESTING = True
+#     DB_URL = 'sqlite:///app.db'
 
 
 class TestMLOPS(unittest.TestCase):
     def setUp(self):
-        self.app = create_app(TestConfig)
+        self.app = create_app('testing')
         self.app_context = self.app.app_context()
         self.app_context.push()
         self.client = self.app.test_client()
@@ -116,6 +116,7 @@ class TestMLOPS(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn(cat_temp_name, js['cat_name'])
 
+
     def test_api_product_in_category(self):
         prod_temp_name="TEST_PROD_NAME"
         cat_temp_name="TEST_CAT_NAME"
@@ -135,6 +136,27 @@ class TestMLOPS(unittest.TestCase):
         js = resp.json['items'][0]
         self.assertEqual(resp.status_code, 200)
         self.assertIn(cat_temp_name, js['cat_name'])
+
+
+    def test_api_category_in_product(self):
+        prod_temp_name="TEST_PROD_NAME"
+        cat_temp_name="TEST_CAT_NAME"
+        prod = Product(prod_name=prod_temp_name)
+        cat = Category(cat_name=cat_temp_name)
+
+        db.session.add(prod)
+        db.session.add(cat)
+        db.session.commit()
+
+        prod_id = Product.query.filter_by(prod_name=prod_temp_name).first()
+        cat_id = Category.query.filter_by(cat_name=cat_temp_name).first()
+        prod.categories.append(cat_id)
+        db.session.commit()
+        resp = self.client.get(f'/api/categories/{str(cat_id.id)}/products')
+
+        js = resp.json['items'][0]
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(prod_temp_name, js['prod_name'])
 
 
 if __name__ == '__main__':

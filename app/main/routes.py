@@ -1,6 +1,6 @@
+from flask import render_template, flash, request
 from app.init_db import clear_data, dummy_data
 from app.main import bp
-from flask import render_template, request, flash
 
 # @bp.before_app_first_request
 # def create_tables():

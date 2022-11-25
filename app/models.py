@@ -10,13 +10,14 @@ class PaginatedAPIMixin(object):
     For convient work with collection of items
     """
     @staticmethod
-    def to_collection_dict(query, page:int, per_page:int, endpoint:str, **kwargs)->dict:
+    def to_collection_dict(query, page:int, per_page:int, endpoint:str,
+                            full_data:bool=False, **kwargs)->dict:
         """
         Generic method for convert query to dict
         """
-        resources = query.paginate(page=page, per_page=per_page, error_out=False)
+        resources = db.paginate(select=query, per_page=per_page, error_out=False)
         data = {
-            'items': [item.to_dict() for item in resources.items],
+            'items': [item.to_dict(endpoint, full_data) for item in resources.items],
             '_meta': {
                 'page': page,
                 'per_page': per_page,
@@ -55,18 +56,41 @@ class Product(PaginatedAPIMixin, db.Model):
     def __repr__(self)->str:
         return f'<Product id={self.id} prod_name={self.prod_name}>'
 
-    def to_dict(self):
+    def to_dict(self, endpoint:str, full_dict:bool=False)->dict:
         """
         Return dict that represents Product for JSON serialization
         """
-        data = {
-            'id': self.id,
-            'prod_name': self.prod_name,
-            '_links': {
-                'self': url_for('api.get_product', id=self.id),
-                # 'categories': url_for('api.get_followers', id=self.id),
+        # data = {
+        #     'id': self.id,
+        #     'prod_name': self.prod_name,
+        #     '_links': {
+        #         'self': url_for(endpoint='api.get_product', id=self.id),
+        #     }
+        # }
+        if full_dict:
+            # fulldata = Category.to_collection_dict(self.categories, 1, 10, 'api.get_categories')
+            # fulldata = db.paginate(select=self.categories, per_page=10, error_out=False)
+            fulldata = db.paginate(select=db.select(Category).join(Category.products).where(Product.id==self.id), per_page=10, error_out=False)
+            # cats = db.paginate(select=self.categories, per_page=10, error_out=False)
+            data = {
+                'id': self.id,
+                'prod_name': self.prod_name,
+
+                'categories': [item.to_dict(endpoint, False) for item in fulldata.items],
+                '_links': {
+                    'self': url_for(endpoint=endpoint),
+    
+                }
             }
-        }
+            return data
+        else: 
+            data = {
+                'id': self.id,
+                'prod_name': self.prod_name,
+                '_links': {
+                    'self': url_for(endpoint='api.get_product', id=self.id),
+                }
+            }
         return data
 
 
@@ -80,12 +104,10 @@ class Category(PaginatedAPIMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cat_name = db.Column(db.String(50), unique=True)
 
-    # products = db.relationship("Product", secondary=products_categories,
-    #                             backref=db.backref('entity', lazy='dynamic'), lazy='dynamic')
     def __repr__(self)->str:
         return f'<Category id={self.id}, cat_name={self.cat_name}>'
 
-    def to_dict(self):
+    def to_dict(self, endpoint:str, full_dict:bool=False)->dict:
         """
         Return dict that represents Product for JSON serialization
         """
@@ -93,8 +115,15 @@ class Category(PaginatedAPIMixin, db.Model):
             'id': self.id,
             'cat_name': self.cat_name,
             '_links': {
-                'self': url_for('api.get_category', id=self.id),
-                # 'categories': url_for('api.get_followers', id=self.id),
+                'self': url_for(endpoint='api.get_category', id=self.id),
+            }
+        }
+        if full_dict:
+                    data = {
+            'id': self.id,
+            'cat_name': self.cat_name,
+            '_links': {
+                'self': url_for(endpoint=endpoint, id=self.id),
             }
         }
         return data
